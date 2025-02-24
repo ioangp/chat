@@ -165,7 +165,7 @@ DWORD WINAPI recv_msg(void* data) {
 
 void check(int result, char *message){
 	if(result != 0){
-		printf(message = " | %d\n", result);
+		printf(message + " | %d\n", result);
 		exit(1);
 	}
 }

@@ -4,6 +4,7 @@
 #include <iphlpapi.h>
 #include <stdio.h>
 #include <string.h>
+#include "colours.h"
 
 #define MSG_LEN     1024
 #define NAME_LEN    32
@@ -46,7 +47,7 @@ int main(int argc, char *argv[]){
 	if (iResult != 0) {
 		printf("getaddrinfo failed | %d\n", iResult);
 		WSACleanup();
-		return 1;
+		exit(1);
 	}
 	
 	// Attempt to connect to the first address returned by
@@ -61,11 +62,11 @@ int main(int argc, char *argv[]){
 		printf("Error at socket(): %d\n", WSAGetLastError());
 		freeaddrinfo(result);
 		WSACleanup();
-		return 1;
+		exit(1);
 	}
 
 	// Connect to server.
-	iResult = connect( sock, ptr->ai_addr, (int)ptr->ai_addrlen);
+	iResult = connect(sock, ptr->ai_addr, (int)ptr->ai_addrlen);
 	if (iResult == SOCKET_ERROR) {
 		closesocket(sock);
 		sock = INVALID_SOCKET;
@@ -80,13 +81,13 @@ int main(int argc, char *argv[]){
 	}
 
 	// clear the screen
-    //system("cls");
+    system("cls");
 
     // print the welcome message to the screen
-    printf("Welcome to group chat! (Q/q to quit)\n\n");
+    printf(BOLD "Welcome to group chat! (Q/q to quit)\n\n" RESET);
 	
 	// Send join message
-    sprintf(msg, "+++++ %s has joined! +++++\n", name);
+    sprintf(msg, "== %s has joined ==\n", name);
     send(sock, msg, strlen(msg), 0);
 
 	// It's thread time
@@ -125,7 +126,7 @@ DWORD WINAPI send_msg(void* data) {
         if (!strcmp(msg, "q\n") || !strcmp(msg, "Q\n"))
         {
             // print the leave message to the screen
-            sprintf(msg, "----- %s has left! -----\n", name);
+            sprintf(msg, "== %s has left! ==\n", name);
             send(sock, msg, strlen(msg), 0);
 
             // terminate the connection
@@ -145,6 +146,9 @@ DWORD WINAPI recv_msg(void* data) {
     SOCKET sock = *((SOCKET*)data);
     char name_msg[NAME_LEN + MSG_LEN + 2];
     int str_len;
+    
+    char nym[NAME_LEN + 2];
+   	sprintf(nym, "[%s]", name);
 
     while(1)
     {
@@ -156,16 +160,28 @@ DWORD WINAPI recv_msg(void* data) {
         if (str_len == -1)
             return 0;
 
-        // print the received message to the screen
-        name_msg[str_len] = 0;
-        fputs(name_msg, stdout);
+		name_msg[str_len] = 0;
+
+		// check if this is ourselves (TODO: what about duplicate usernames?)
+		int cmp = strncmp(nym, name_msg, strlen(nym));		
+		if(cmp == 0){
+			// make our own text dim
+			fputs(DIM, stdout);
+			fputs(name_msg, stdout);
+			fputs(RESET, stdout);
+		} else{
+			// print the received message to the screen
+		    name_msg[str_len] = 0;
+		    fputs(name_msg, stdout);	
+		}
+        
     }
 	return 0;
 }
 
 void check(int result, char *message){
 	if(result != 0){
-		printf(message + " | %d\n", result);
+		printf("%s | code %d\n", message, result);
 		exit(1);
 	}
 }

@@ -1,5 +1,5 @@
 # chat
-As of 24/02/2025, simply [Kjungjae's](https://kyungjae.com/projects/tcpip-group-chat-application/) groupchat client but for Windows. I'm planning to add more features in the near future.
+[Kjungjae's](https://kyungjae.com/projects/tcpip-group-chat-application/) groupchat client but for Windows. I'm planning to add more features in the near future.
 
 ## Compiling
 ```

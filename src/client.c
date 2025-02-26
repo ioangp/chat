@@ -4,7 +4,7 @@
 #include <iphlpapi.h>
 #include <stdio.h>
 #include <string.h>
-#include "colours.h"
+#include "display.h"
 
 #define MSG_LEN     1024
 #define NAME_LEN    32
@@ -32,13 +32,13 @@ int main(int argc, char *argv[]){
 		"WSAStartup failed");
 	
 	// Set up user name
-	char *colour;
+	char colour;
 	if(argc == 4){
-		colour = WHT;
+		colour = 'w';
 	}else{
-		colour = string_to_colour(argv[4]);
+		colour = argv[4][0];
 	}
-	sprintf(name, "%s%s%s", colour, argv[3], RESET);
+	sprintf(name, " @%c %s ", colour, argv[3]);
 	
 	// Create socket
 	SOCKET sock = INVALID_SOCKET;
@@ -89,13 +89,13 @@ int main(int argc, char *argv[]){
 	}
 
 	// clear the screen
-	system("cls");
+	//system("cls");
 
-    // print the welcome message to the screen
-	printf(BOLD "Welcome to group chat! (Q/q to quit)\n\n" RESET);
-	
+	// start curses display
+	display_start();
+
 	// Send join message
-	sprintf(msg, "== %s has joined ==\n", name);
+	sprintf(msg, "== %s has joined ==", name);
 	send(sock, msg, strlen(msg), 0);
 
 	// It's thread time
@@ -105,6 +105,8 @@ int main(int argc, char *argv[]){
 	HANDLE threads[2] = {send_thread, recv_thread};
 	
 	WaitForMultipleObjects(2, threads, FALSE, INFINITE);
+
+	display_end();
 	
 	// shutdown the send half of the connection since no more data will be sent
 	iResult = shutdown(sock, SD_SEND);
@@ -128,10 +130,10 @@ DWORD WINAPI send_msg(void* data) {
 
 	while (1)
 	{
-		fgets(msg, MSG_LEN, stdin);
+		display_input(msg, MSG_LEN);
 
 		// terminate the connection upon user input Q/q
-		if (!strcmp(msg, "q\n") || !strcmp(msg, "Q\n"))
+		if (!strcmp(msg, "q") || !strcmp(msg, "Q"))
 		{
 			// print the leave message to the screen
 			sprintf(msg, "== %s has left! ==\n", name);
@@ -140,6 +142,7 @@ DWORD WINAPI send_msg(void* data) {
 			// terminate the connection
 			closesocket(sock);
 			WSACleanup();
+			display_end();
 			exit(0);
 		}
 
@@ -170,28 +173,9 @@ DWORD WINAPI recv_msg(void* data) {
 
 		name_msg[str_len] = 0;
 
-		// check if this is ourselves (TODO: what about duplicate usernames?)
-		/*
-		int cmp = strncmp(nym, name_msg, strlen(nym));		
-		if(cmp == 0){
-			// make our own text dim
-			print_coloured(name_msg, DIM);
-		} else{
-			// print the received message to the screen
-		    name_msg[str_len] = 0;
-		    print_coloured(name_msg, WHT);	
-		}
-		*/
-		printf(name_msg);
-     
+		display_rcv(name_msg);
 	}
 	return 0;
-}
-
-void print_coloured(char *msg, char *colour){
-	printf(colour);
-	printf(msg);
-	printf(RESET);
 }
 
 void check(int result, char *message){

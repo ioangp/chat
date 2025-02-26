@@ -1,6 +1,8 @@
 #ifndef COLOURS_H
 #define COLOURS_H
 
+char* string_to_colour(char*);
+
 // Graphics
 #define RESET  "\033[0m"
 #define BOLD   "\033[1m"

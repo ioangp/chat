@@ -10,6 +10,7 @@
 #define NAME_LEN    32
 
 void check(int, char*);
+void print_coloured(char*, char*);
 DWORD WINAPI send_msg(void*);
 DWORD WINAPI recv_msg(void*);
 
@@ -19,8 +20,10 @@ char info_msg[MSG_LEN];
 
 int main(int argc, char *argv[]){
 	// Check for correct number of arguments
-	check(argc - 4,
-		"Usage: client <serverIP> <port> <name>");
+	if(!(argc == 4 || argc == 5)){
+		printf("Usage: .\\client.exe <serverIP> <port> <name> <colour>");
+		exit(1);
+	}
 
 	// Windows sockets init
 	WSADATA wsaData;
@@ -28,8 +31,14 @@ int main(int argc, char *argv[]){
 	check(WSAStartup(MAKEWORD(2,2), &wsaData),
 		"WSAStartup failed");
 	
-	// Setup user name
-	sprintf(name, "%s", argv[3]);
+	// Set up user name
+	char *colour;
+	if(argc == 4){
+		colour = WHT;
+	}else{
+		colour = string_to_colour(argv[4]);
+	}
+	sprintf(name, "%s%s%s", colour, argv[3], RESET);
 	
 	// Create socket
 	SOCKET sock = INVALID_SOCKET;
@@ -50,8 +59,7 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
 	
-	// Attempt to connect to the first address returned by
-	// the call to getaddrinfo
+	// Attempt to connect to the first address returned by the call to getaddrinfo
 	ptr=result;
 
 	// Create a SOCKET for connecting to server
@@ -77,18 +85,18 @@ int main(int argc, char *argv[]){
 	if (sock == INVALID_SOCKET) {
 		printf("Unable to connect to server!\n");
 		WSACleanup();
-		return 1;
+		exit(1);
 	}
 
 	// clear the screen
-    system("cls");
+	system("cls");
 
     // print the welcome message to the screen
-    printf(BOLD "Welcome to group chat! (Q/q to quit)\n\n" RESET);
+	printf(BOLD "Welcome to group chat! (Q/q to quit)\n\n" RESET);
 	
 	// Send join message
-    sprintf(msg, "== %s has joined ==\n", name);
-    send(sock, msg, strlen(msg), 0);
+	sprintf(msg, "== %s has joined ==\n", name);
+	send(sock, msg, strlen(msg), 0);
 
 	// It's thread time
 	// create two threads to carry out send and receive operations, respectively
@@ -115,68 +123,75 @@ int main(int argc, char *argv[]){
 }
 
 DWORD WINAPI send_msg(void* data) {
-    SOCKET sock = *((SOCKET*)data);
-    char name_msg[NAME_LEN + MSG_LEN + 2];  // add '2' for brackets around the name
+	SOCKET sock = *((SOCKET*)data);
+	char name_msg[NAME_LEN + MSG_LEN + 2];  // add '2' for brackets around the name
 
-    while (1)
-    {
-        fgets(msg, MSG_LEN, stdin);
+	while (1)
+	{
+		fgets(msg, MSG_LEN, stdin);
 
-        // terminate the connection upon user input Q/q
-        if (!strcmp(msg, "q\n") || !strcmp(msg, "Q\n"))
-        {
-            // print the leave message to the screen
-            sprintf(msg, "== %s has left! ==\n", name);
-            send(sock, msg, strlen(msg), 0);
+		// terminate the connection upon user input Q/q
+		if (!strcmp(msg, "q\n") || !strcmp(msg, "Q\n"))
+		{
+			// print the leave message to the screen
+			sprintf(msg, "== %s has left! ==\n", name);
+			send(sock, msg, strlen(msg), 0);
 
-            // terminate the connection
-            closesocket(sock);
+			// terminate the connection
+			closesocket(sock);
 			WSACleanup();
-            exit(0);
-        }
+			exit(0);
+		}
 
-        // construct the message and send it to the server
-        sprintf(name_msg, "[%s] %s", name, msg);
-        send(sock, name_msg, strlen(name_msg), 0);
-    }
+		// construct the message and send it to the server
+		sprintf(name_msg, "[%s] %s", name, msg);
+		send(sock, name_msg, strlen(name_msg), 0);
+	}
 	return 0;
 }
 
 DWORD WINAPI recv_msg(void* data) {
-    SOCKET sock = *((SOCKET*)data);
-    char name_msg[NAME_LEN + MSG_LEN + 2];
-    int str_len;
+	SOCKET sock = *((SOCKET*)data);
+	char name_msg[NAME_LEN + MSG_LEN + 2];
+	int str_len;
     
-    char nym[NAME_LEN + 2];
-   	sprintf(nym, "[%s]", name);
+	char nym[NAME_LEN + 2];
+	sprintf(nym, "[%s]", name);
 
-    while(1)
-    {
-        // receive the message broadcasted by the server
-        str_len = recv(sock, name_msg, NAME_LEN + MSG_LEN + 2 - 1, 0); 
-            // add '2' for brackets around the name
+	while(1)
+	{
+		// receive the message broadcasted by the server
+		str_len = recv(sock, name_msg, NAME_LEN + MSG_LEN + 2 - 1, 0); 
+			// add '2' for brackets around the name
 
-        // terminate the thread if the client has been disconnected
-        if (str_len == -1)
-            return 0;
+		// terminate the thread if the client has been disconnected
+		if (str_len == -1)
+			return 0;
 
 		name_msg[str_len] = 0;
 
 		// check if this is ourselves (TODO: what about duplicate usernames?)
+		/*
 		int cmp = strncmp(nym, name_msg, strlen(nym));		
 		if(cmp == 0){
 			// make our own text dim
-			fputs(DIM, stdout);
-			fputs(name_msg, stdout);
-			fputs(RESET, stdout);
+			print_coloured(name_msg, DIM);
 		} else{
 			// print the received message to the screen
 		    name_msg[str_len] = 0;
-		    fputs(name_msg, stdout);	
+		    print_coloured(name_msg, WHT);	
 		}
-        
-    }
+		*/
+		printf(name_msg);
+     
+	}
 	return 0;
+}
+
+void print_coloured(char *msg, char *colour){
+	printf(colour);
+	printf(msg);
+	printf(RESET);
 }
 
 void check(int result, char *message){

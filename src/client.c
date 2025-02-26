@@ -95,7 +95,7 @@ int main(int argc, char *argv[]){
 	display_start();
 
 	// Send join message
-	sprintf(msg, "== %s has joined ==\n", name);
+	sprintf(msg, "== %s has joined ==", name);
 	send(sock, msg, strlen(msg), 0);
 
 	// It's thread time

@@ -56,7 +56,6 @@ void display_rcv(char *message){
 	int column = count + 1;
 	
 	/* split into tokens and do colour stuff. */
-	//mvwprintw(win, column, 1, message);
 	wmove(win, column, 1);
 	
 	char *token = strtok(msg, " ");

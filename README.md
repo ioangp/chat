@@ -2,8 +2,9 @@
 [Kjungjae's](https://kyungjae.com/projects/tcpip-group-chat-application/) groupchat client but for Windows. I'm planning to add more features in the near future.
 
 ## Compiling
+Run build.bat or
 ```
-gcc client.c -o client -lws2_32 
+gcc .\src\*.c -o client -lws2_32 
 ```
 
 ## Usage

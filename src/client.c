@@ -18,9 +18,63 @@ char name[NAME_LEN] = "noname";
 char msg[MSG_LEN];
 char info_msg[MSG_LEN];
 
+struct Arguments {
+	char* serverIP;
+	char* port;
+	char* name;
+	char colour;
+};
+struct Arguments args;
+
+void cliSetup(int argc, char *argv[]) {
+	char colour;
+
+	if(argc == 4 || strchr("wrgbcym", argv[4][0]) == NULL){
+		colour = 'w';
+	} else {
+		colour = argv[4][0];
+	}
+
+	args = (struct Arguments) {
+		.serverIP = argv[1],
+		.port = argv[2],
+		.name = argv[3],
+		.colour = colour
+	};
+}
+
+void manSetup() {
+	char *ip = malloc(32); char *port = malloc(32); char *username = malloc(32); char colour[16]; // I think this is wrong?
+	
+	printf("Enter a server ip:\n");
+	scanf("%s", ip);
+
+	printf("\nEnter a server port:\n");
+	scanf("%s", port);
+
+	printf("\nEnter a username:\n");
+	scanf("%s", username);
+
+	printf("\nEnter a colour code:\n");
+	scanf("%s", colour);
+
+	if(strchr("wrgbcym", colour[0]) == NULL){
+		colour[0] = 'w';
+	}
+
+	args = (struct Arguments) {.serverIP = ip, .port = port, .name = username, .colour = colour[0]};
+
+}
+
 int main(int argc, char *argv[]){
 	// Check for correct number of arguments
-	if(!(argc == 4 || argc == 5)){
+	if(argc == 4 || argc == 5) {
+		cliSetup(argc, argv);
+	}
+	else if(argc == 1) {
+		manSetup();
+	}
+	else {
 		printf("Usage: .\\client.exe <serverIP> <port> <name> <colour>");
 		exit(1);
 	}
@@ -30,15 +84,7 @@ int main(int argc, char *argv[]){
 
 	check(WSAStartup(MAKEWORD(2,2), &wsaData),
 		"WSAStartup failed");
-	
-	// Set up user name
-	char colour;
-	if(argc == 4){
-		colour = 'w';
-	}else{
-		colour = argv[4][0];
-	}
-	sprintf(name, " @%c %s ", colour, argv[3]);
+	sprintf(name, " @%c %s ", args.colour, args.name);
 	
 	// Create socket
 	SOCKET sock = INVALID_SOCKET;
@@ -52,7 +98,7 @@ int main(int argc, char *argv[]){
 	
 	// Resolve the server address and port
 	int iResult = 0;
-	iResult = getaddrinfo(argv[1], argv[2], &hints, &result);
+	iResult = getaddrinfo(args.serverIP, args.port, &hints, &result);
 	if (iResult != 0) {
 		printf("getaddrinfo failed | %d\n", iResult);
 		WSACleanup();

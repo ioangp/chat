@@ -61,12 +61,14 @@ void display_rcv(char *message){
 	char *token = strtok(msg, " ");
 
 	wprintw(win, "%s ", token);
-	
+
+	// consume every token
 	while(token != NULL){
 		token = strtok(NULL, " ");
 		if(token == NULL)
-			break;
+			break; // end of string
 
+		// check for '@x' colour codes
 		if(strlen(token) == 2 && token[0] == '@'){
 			wattron(win, COLOR_PAIR(colourkey_to_pair(token[1])));
 			token = strtok(NULL, " ");

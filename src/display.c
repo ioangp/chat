@@ -70,7 +70,29 @@ void display_rcv(char *message){
 
 		// check for '@x' colour codes
 		if(strlen(token) == 2 && token[0] == '@'){
-			wattron(win, COLOR_PAIR(colourkey_to_pair(token[1])));
+			if(strchr("wrgbcym", token[1]) != NULL)
+				wattron(win, COLOR_PAIR(colourkey_to_pair(token[1])));
+			else if(token[1] == 'v'){
+				wattron(win, A_REVERSE);
+			}
+			else if(token[1] == 'k'){
+				wattron(win, A_BOLD);
+			}
+
+			token = strtok(NULL, " ");
+			if(token == NULL)
+				break;
+		}
+		else if (strlen(token) == 3 && token[0] == '@'){
+			if(strchr("wrgbcym", token[1]) == NULL)
+				break;
+			else if(token[2] == 'v'){
+				wattron(win, A_REVERSE | COLOR_PAIR(colourkey_to_pair(token[1])));
+			}
+			else if(token[2] == 'k'){
+				wattron(win, A_BOLD | COLOR_PAIR(colourkey_to_pair(token[1])));
+			}
+
 			token = strtok(NULL, " ");
 			if(token == NULL)
 				break;

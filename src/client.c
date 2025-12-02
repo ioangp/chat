@@ -44,26 +44,28 @@ void cliSetup(int argc, char *argv[]) {
 }
 
 void manSetup() {
-	char *ip = malloc(32); char *port = malloc(32); char *username = malloc(32); char colour[16]; // I think this is wrong?
-	
+	char ip[32];
+	char port[32];
+	char username[64];
+	char colour[2];
+		
 	printf("Enter a server ip:\n");
-	scanf("%s", ip);
+	scanf("%32s", ip);
 
 	printf("\nEnter a server port:\n");
-	scanf("%s", port);
+	scanf("%32s", port);
 
 	printf("\nEnter a username:\n");
-	scanf("%s", username);
+	scanf("%64s", username);
 
 	printf("\nEnter a colour code:\n");
-	scanf("%s", colour);
+	scanf("%2s", colour);
 
 	if(strchr("wrgbcym", colour[0]) == NULL){
 		colour[0] = 'w';
 	}
 
 	args = (struct Arguments) {.serverIP = ip, .port = port, .name = username, .colour = colour[0]};
-
 }
 
 int main(int argc, char *argv[]){
